@@ -5,8 +5,8 @@ import pyxdf
 import numpy as np
 
 # --- Configuration ---
-# ššš Please replace this with the actual path to your .xdf file ššš
-fname = r'C:\Users\otsuki\Documents\mne_python_analysis\sub-P002_ses-S001_task-Default_run-001_eeg.xdf'
+# ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Please replace this with the actual path to your .xdf file ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+fname = r"C:\Users\otsuki\Documents\CurrentStudy\sub-P002\ses-S001\eeg\sub-P002_ses-S001_task-Default_run-001_eeg.xdf"
 
 # --- Main Logic ---
 if not os.path.exists(fname):
