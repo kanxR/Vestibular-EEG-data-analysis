@@ -21,7 +21,7 @@ def load_xdf_to_mne(fname):
     # 1. Use pyxdf.load_xdf to reliably find all streams in the file
     streams, header = pyxdf.load_xdf(fname)
     
-    # 2. Find the main physiological data stream (assuming it's the first 'EEG' type)
+    # 2. Find the main physiological data stream
     eeg_stream = next((s for s in streams if s['info']['type'][0] == 'EEG'), None)
     if eeg_stream is None:
         raise RuntimeError("Could not find any stream with type 'EEG' in the file.")
@@ -72,7 +72,7 @@ def main():
     """
     # --- Configuration ---
     # ššš Define the input and output file paths ššš
-    input_fname = r'C:\Users\otsuki\Documents\mne_python_analysis\sub-P002_ses-S001_task-Default_run-001_eeg.xdf'
+    input_fname = r'C:\Users\otsuki\Documents\Vestibular-EEG-data-analysis\sub-P002_ses-S001_task-Default_run-001_eeg.xdf'
     output_dir = os.path.dirname(input_fname)
     base_name = os.path.basename(input_fname).replace('_eeg.xdf', '')
     filtered_output_fname = os.path.join(output_dir, f"{base_name}_filtered_raw.fif")
@@ -88,11 +88,9 @@ def main():
     print("\n--- Starting preprocessing: Filtering ---")
     raw_filtered = raw.copy()
 
-    # Apply a Notch Filter to remove power line noise (50 Hz)
     print("Applying Notch filter at 50 Hz...")
     raw_filtered.notch_filter(freqs=50, fir_design='firwin')
 
-    # Apply a Band-pass Filter (0.1 Hz to 40 Hz)
     l_freq, h_freq = 0.1, 40.0
     print(f"Applying Band-pass filter from {l_freq} Hz to {h_freq} Hz...")
     raw_filtered.filter(l_freq=l_freq, h_freq=h_freq, fir_design='firwin')
@@ -100,12 +98,18 @@ def main():
 
     # --- Step 3: Visualize the Results ---
     print("\nPlotting Power Spectral Density to show filter effects.")
-    raw.plot_psd(fmax=80, show=False).suptitle('Before Filtering', top=0.95)
-    raw_filtered.plot_psd(fmax=80, show=False).suptitle('After Filtering', top=0.95)
+    
+    # ššš FIX: Use the modern .compute_psd().plot() method and 'y' argument ššš
+    # This section has been updated to fix the error and use current MNE best practices.
+    fig_before = raw.compute_psd(fmax=80).plot(show=False)
+    fig_before.suptitle('Before Filtering', y=0.95) # Use 'y' instead of 'top'
+
+    fig_after = raw_filtered.compute_psd(fmax=80).plot(show=False)
+    fig_after.suptitle('After Filtering', y=0.95) # Use 'y' instead of 'top'
+    
     plt.show(block=True) # Show both PSD plots
 
     # --- Step 4: Save the Filtered Data ---
-    # Saving the data in MNE's .fif format is efficient and preserves all information.
     print(f"\nSaving filtered data to: {filtered_output_fname}")
     raw_filtered.save(filtered_output_fname, overwrite=True)
     print("Done. You can now use this .fif file for the next preprocessing steps.")
