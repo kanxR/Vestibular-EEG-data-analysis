@@ -71,8 +71,8 @@ def main():
     Main function to run the loading and filtering pipeline.
     """
     # --- Configuration ---
-    # ššš Define the input and output file paths ššš
-    input_fname = r'C:\Users\otsuki\Documents\mne_python_analysis\sub-P002_ses-S001_task-Default_run-001_eeg.xdf'
+    # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Define the input and output file paths ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    input_fname = r"C:\Users\otsuki\Documents\CurrentStudy\sub-P002\ses-S001\eeg\sub-P002_ses-S001_task-Default_run-001_eeg.xdf"
     output_dir = os.path.dirname(input_fname)
     base_name = os.path.basename(input_fname).replace('_eeg.xdf', '')
     filtered_output_fname = os.path.join(output_dir, f"{base_name}_filtered_raw.fif")
