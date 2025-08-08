@@ -71,8 +71,8 @@ def main():
     Main function to run the loading and filtering pipeline.
     """
     # --- Configuration ---
-    # ššš Define the input and output file paths ššš
-    input_fname = r'C:\Users\otsuki\Documents\Vestibular-EEG-data-analysis\sub-P002_ses-S001_task-Default_run-001_eeg.xdf'
+    # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Define the input and output file paths ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    input_fname = r"C:\Users\otsuki\Documents\CurrentStudy\sub-P002\ses-S001\eeg\sub-P002_ses-S001_task-Default_run-001_eeg.xdf"
     output_dir = os.path.dirname(input_fname)
     base_name = os.path.basename(input_fname).replace('_eeg.xdf', '')
     filtered_output_fname = os.path.join(output_dir, f"{base_name}_filtered_raw.fif")
@@ -99,7 +99,7 @@ def main():
     # --- Step 3: Visualize the Results ---
     print("\nPlotting Power Spectral Density to show filter effects.")
     
-    # ššš FIX: Use the modern .compute_psd().plot() method and 'y' argument ššš
+    # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ FIX: Use the modern .compute_psd().plot() method and 'y' argument ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     # This section has been updated to fix the error and use current MNE best practices.
     fig_before = raw.compute_psd(fmax=80).plot(show=False)
     fig_before.suptitle('Before Filtering', y=0.95) # Use 'y' instead of 'top'
