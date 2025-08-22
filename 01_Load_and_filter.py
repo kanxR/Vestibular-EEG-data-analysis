@@ -67,19 +67,17 @@ def load_xdf_to_mne(fname):
                 print("Invalid input. Please enter a number or 'none'.")
 
         # 5. Extract data and metadata from the selected EEG stream
-        data = np.array(eeg_stream['time_series']).T
+        #data = np.array(eeg_stream['time_series']).T
+        data = np.array(eeg_stream['time_series']).T * 1e-6  # convert from µV to V
+
         sfreq = float(eeg_stream['info']['nominal_srate'][0])
         ch_names = [ch['label'][0] for ch in eeg_stream['info']['desc'][0]['channels'][0]['channel']]
         
         # 6. Dynamically set channel types
-        # --- FIX ADDED HERE ---
-        # More specific channel typing to handle EOG, ECG, and other AUX channels.
-        # This prevents visualization errors caused by overlapping positions.
         ch_types = []
         for name in ch_names:
             uname = name.upper()
-            # Assuming AUX7 and AUX8 are EOG, and AUX9 is ECG
-            if 'EOG' in uname or name in ['AUX7', 'AUX8']:
+            if 'EOG' in uname or name == 'AUX7' or name == 'AUX8':
                 ch_types.append('eog')
             elif 'ECG' in uname or name == 'AUX9':
                 ch_types.append('ecg')
@@ -87,18 +85,26 @@ def load_xdf_to_mne(fname):
                 ch_types.append('stim')
             else:
                 ch_types.append('eeg')
-        # --- END OF FIX ---
         
         # 7. Create the MNE Info object and the RawArray object
         info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
         raw = mne.io.RawArray(data, info)
         
-        # Rename channels to match the standard_1005 montage nomenclature.
-        rename_dict = {'FPz': 'Fpz', 'OZ': 'Oz'}
+        # --- FIX ADDED HERE ---
+        # Rename AUX channels to specific EOG/ECG types to avoid position conflicts
+        # and improve clarity. This also renames standard EEG channels for montage compatibility.
+        rename_dict = {
+            'FPz': 'Fpz', 
+            'OZ': 'Oz',
+            'AUX7': 'vEOG',  # Vertical EOG
+            'AUX8': 'hEOG',  # Horizontal EOG
+            'AUX9': 'ECG'
+        }
         channels_to_rename = {key: val for key, val in rename_dict.items() if key in raw.ch_names}
         if channels_to_rename:
-            print(f"Renaming channels to match montage: {channels_to_rename}")
+            print(f"Renaming channels for clarity and compatibility: {channels_to_rename}")
             raw.rename_channels(channels_to_rename)
+        # --- END OF FIX ---
 
         montage = mne.channels.make_standard_montage('standard_1005')
         raw.set_montage(montage, on_missing='warn')
@@ -127,7 +133,7 @@ def main():
     Main function to run the loading and filtering pipeline.
     """
     # --- Configuration ---
-    input_fname = r"C:\Users\otsuki\Documents\CurrentStudy\sub-P002\ses-S001\eeg\sub-P002_ses-S001_task-Default_run-001_eeg.xdf"
+    input_fname = r"sub-P003_ses-S001_task-Default_run-001_eeg.xdf"
     output_dir = os.path.dirname(input_fname)
     base_name = os.path.basename(input_fname).replace('_eeg.xdf', '')
     filtered_output_fname = os.path.join(output_dir, f"{base_name}_filtered_raw.fif")
@@ -145,18 +151,29 @@ def main():
     # --- Step 2: Drop Unwanted Channels ---
     print("\n--- Removing unwanted channels ---")
     # --- FIX ADDED HERE ---
-    # Added 'AUX' to the list of channels to drop.
-    channels_to_drop = [ch for ch in raw.ch_names if 'EOG' in ch.upper() or 'TRIGGER' in ch.upper() or 'AUX' in ch.upper() or 'ECG' in ch.upper()]
+    # Drop channels by exact name to avoid accidentally removing the renamed AUX channels.
+    channels_to_drop = ['EOG', 'TRIGGER']
     # --- END OF FIX ---
-    if channels_to_drop:
-        print(f"Dropping the following channels: {', '.join(channels_to_drop)}")
-        raw.drop_channels(channels_to_drop)
+    
+    # Check which of the channels to drop actually exist in the raw object
+    existing_channels_to_drop = [ch for ch in channels_to_drop if ch in raw.ch_names]
+
+    if existing_channels_to_drop:
+        print(f"Dropping the following channels: {', '.join(existing_channels_to_drop)}")
+        raw.drop_channels(existing_channels_to_drop)
     else:
-        print("No 'EOG', 'ECG', 'AUX', or 'TRIGGER' channels found to remove.")
+        print("No 'EOG' or 'TRIGGER' channels found to remove.")
+
+    
+
 
     # --- Step 3: Filter the Data ---
     print("\n--- Starting preprocessing: Filtering ---")
     raw_filtered = raw.copy()
+
+    print(raw_filtered)
+    data, times = raw[:, :1000]  # first 1000 samples
+    print("Mean amplitude (in Volts):", data.mean(), "+/-", data.std())
 
     print("Applying Notch filter at 50 Hz...")
     raw_filtered.notch_filter(freqs=50, fir_design='firwin')
@@ -169,7 +186,6 @@ def main():
     # --- Step 4: Visualize the Results ---
     print("\nPlotting Power Spectral Density to show filter effects.")
     
-    # Note: The "Before" plot is now generated from the raw object *after* dropping non-EEG channels
     fig_before = raw.compute_psd(fmax=80).plot(show=False)
     fig_before.suptitle('Before Filtering (After Dropping Channels)', y=0.95)
 
@@ -180,7 +196,6 @@ def main():
 
     # --- Step 5: Save the Filtered Data ---
     print(f"\nSaving filtered data to: {filtered_output_fname}")
-    # The saved file will only contain the selected streams and channels
     raw_filtered.save(filtered_output_fname, overwrite=True)
     print("Done. You can now use this .fif file for the next preprocessing steps.")
 

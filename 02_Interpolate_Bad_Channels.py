@@ -10,8 +10,8 @@ def main():
     """
     # --- Configuration ---
     # ★★★ Define the input and output file paths ★★★
-    base_dir = r'C:\Users\otsuki\Documents\CurrentStudy\sub-P002\ses-S001\eeg'
-    subject_id = 'sub-P002_ses-S001_task-Default_run-001'
+    base_dir = r'C:\Users\otsuki\Documents\CurrentStudy\sub-P003\ses-S001\eeg'
+    subject_id = 'sub-P003_ses-S001_task-Default_run-001'
     
     input_fname = os.path.join(base_dir, f"{subject_id}_filtered_raw.fif")
     output_fname = os.path.join(base_dir, f"{subject_id}_interpolated_raw.fif")
