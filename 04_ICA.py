@@ -15,7 +15,7 @@ def main():
     # ★★★ Define the input and output file paths ★★★
     # This script takes the re-referenced data from the previous step as input.
     base_dir = r'.' # Use '.' to represent the current directory
-    subject_id = 'sub-P003_ses-S001_task-Default_run-001'
+    subject_id = 'sub-P004_ses-S003_task-Default_run-001'
     
     input_fname = os.path.join(base_dir, f"{subject_id}_rereferenced_raw.fif")
     output_fname = os.path.join(base_dir, f"{subject_id}_ica_cleaned_raw.fif")
